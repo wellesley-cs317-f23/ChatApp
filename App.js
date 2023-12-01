@@ -10,25 +10,33 @@ import { emailOf } from './utils';
 import { firebaseConfig } from './firebaseConfig.js'
 import { initializeApp } from 'firebase/app';
 import { // access to authentication features:
-  getAuth, 
-  // for logging out:
-  signOut
+         getAuth, 
+         // for logging out:
+         signOut
 } from "firebase/auth";
 import { // access to Firestore features:
-  getFirestore, 
+         getFirestore, 
 } from "firebase/firestore";
+
+// New for images:
 import { // access to Firebase storage features (for files like images, video, etc.)
-  getStorage, 
+         getStorage, 
 } from "firebase/storage";
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
+
+// New for images:
 const db = getFirestore(firebaseApp); // for storaging messages in Firestore
+
+
 const storage = getStorage(firebaseApp, 
     firebaseConfig.storageBucket) // for storaging images in Firebase storage
 
-const firebaseProps = {auth, db, storage}
+const firebaseProps = {auth, db, 
+                       storage // New for images
+                      }
 
 export default function App() {
 
@@ -41,10 +49,9 @@ export default function App() {
   // Default email and password (simplifies testing)
   // const defaultEmail = ... your email here ...
   // const defaultPassword = ... your password here ...
-  const defaultEmail = 'fturbak@gmail.com';
-  const defaultPassword = 'myPassword'
-  // const defaultEmail = '';
-  // const defaultPassword = ''
+  const defaultEmail = '';
+  const defaultPassword = ''
+
   const [pscreen, setPscreen] = useState("login");
 
   // Shared state for authentication 
@@ -53,6 +60,10 @@ export default function App() {
   // const [email, setEmail] = useState(''); // Provide default email for testing
   // const [password, setPassword] = useState(''); // Provide default passwored for testing
   const [loggedInUser, setLoggedInUser] = useState(null);
+
+  /** 
+   * Function to log out the user. 
+   */
   function logOut() {
     console.log('logOut'); 
     console.log(`logOut: emailOf(auth.currentUser)=${emailOf(auth.currentUser)}`);

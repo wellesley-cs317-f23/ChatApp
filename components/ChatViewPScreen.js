@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { FlatList, Image, LogBox, StyleSheet, ScrollView, 
-         Text, TextInput, TouchableOpacity, 
-         TouchableWithoutFeedback, View } from 'react-native';
+import { useState, useEffect } from "react";
+import { FlatList, Image, StyleSheet,  Text, TextInput, View } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
-import { // access to Firestore storage features:
-         getFirestore, 
-         // for storage access
+import { // for Firestore access (to store messages)
          collection, doc, addDoc, setDoc,
          query, where, getDocs
   } from "firebase/firestore";
-import { // access to Firebase storage features (for files like images, video, etc.)
-         getStorage, 
-        ref, uploadBytes, uploadBytesResumable, getDownloadURL
+// New for images:
+import { // for Firebase storage access (to store images)
+         ref, uploadBytes, uploadBytesResumable, getDownloadURL
        } from "firebase/storage";
 import { Button } from 'react-native-paper';
 import * as utils from '../utils';
@@ -39,21 +35,22 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
   const db = firebaseProps.db;
   const storage = firebaseProps.storage;
 
-  function addTimestamp(message) {
-    // Add millisecond timestamp field to message 
-    return {...message, timestamp:message.date.getTime()}
-  }  
-
   // State for chat channels and messages
-  const [channels, setChannels] = React.useState(defaultChannels);
-  const [selectedChannel, setSelectedChannel] = React.useState('Food');
-  const [selectedMessages, setSelectedMessages] = React.useState([]);
+  const [channels, setChannels] = useState(defaultChannels);
+  const [selectedChannel, setSelectedChannel] = useState('Food');
+  const [selectedMessages, setSelectedMessages] = useState([]);
   const [isComposingMessage, setIsComposingMessage] = useState(false);
   // Faking message database (just a list of messages) for local testing
   const [localMessageDB, setLocalMessageDB] = useState(testMessages.map( addTimestamp ));
   const [usingFirestore, setUsingFirestore] = useState(true); // If false, only using local data. 
+
+  // New state variable for storing image URIs
   const [postImageUri, setPostImageUri] = useState(null);
 
+  function addTimestamp(message) {
+    // Add millisecond timestamp field to message 
+    return {...message, timestamp:message.date.getTime()}
+  }  
 
   /***************************************************************************
    CHAT CHANNEL/MESSAGE CODE
@@ -256,7 +253,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
    * by adding a human-readable date (which isn't stored in Firestore).
    */ 
   function docToMessage(msgDoc) {
-    // msgDoc has the form {id: timestampetring, 
+    // msgDoc has the form {id: timestampstring, 
     //                   data: {timestamp: ..., // a number, not a string 
     //                          author: ..., // email address
     //                          channel: ..., // name of channel 
@@ -286,7 +283,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
    */ 
   function cancelMessage() {
     setIsComposingMessage(false);
-    setPostImageUri(null);
+    setPostImageUri(null); // New for images
   }
 
   /**
@@ -319,6 +316,8 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
     console.log('Picked image:', result);
 
     if (!result.canceled) {
+      // assets[0] has info about picked image;
+      // assets[0].uri is its URI
       setPostImageUri(result.assets[0].uri);
     }
   };
@@ -425,7 +424,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
         <Text style={styles.messageDateTime}>{utils.formatDateTime(message.date)}</Text>
         <Text style={styles.messageAuthor}>{message.author}</Text>
         <Text style={styles.messageContent}>{message.content}</Text>
-        {// Conditionall display image if there is one: 
+        {// New for images. Conditionally display image if there is one: 
           message.imageUri &&
           <Image
             style={styles.thumbnail}
@@ -437,6 +436,10 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
   }
 
   function ComposeMessagePane() {
+
+    // Lyn sez: dunno why, but declaring this state variable *outside*
+    // of this local component causes keyboard to close every time
+    // a character is typed. 
     const [textInputValue, setTextInputValue] = useState('');
 
     /**
@@ -456,7 +459,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
         'channel': selectedChannel, 
         'content': textInputValue, 
       }
-      // Add imageUri to newMessage if there is one. 
+      // New for images. Add imageUri to newMessage if there is one. 
       if (postImageUri) {
         newMessage.imageUri = postImageUri; // Local image uri
       }
@@ -470,6 +473,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
         if (!postImageUri) {
           firebasePostMessage(newMessage);
         } else {
+          // New for images: 
           // Posting message with image is more complicated,
           // have a separate helper function for this
           firebasePostMessageWithImage(newMessage)
@@ -480,13 +484,6 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
     return (
       isComposingMessage &&
       <View style={styles.composePane}>
-        {/*<TextInput
-          placeholder="message text goes here"
-          style={styles.textInputArea}
-          value={textInputValue} 
-          onChangeText={setTextInputValue}
- 
-    /> */}
         <TextInput
           multiline
           placeholder="message text goes here"
@@ -494,7 +491,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
           value={textInputValue} 
           onChangeText={setTextInputValue}
         />
-        {// Conditionally display image if there is one: 
+        {// New for imaages. Conditionally display image if there is one: 
          postImageUri &&
           <Image
             style={styles.thumbnail}
@@ -509,6 +506,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
             onPress={cancelMessage}>
             Cancel
           </Button>
+          {/* New for images: a button to add an image. */}
           <Button
             mode="contained" 
             style={globalStyles.button}

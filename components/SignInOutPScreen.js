@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { // access to authentication features:
-         getAuth, 
-         // for email/password authentication: 
+import { useState, useEffect } from "react";
+import { Alert, Text, TextInput, View } from 'react-native';
+import { // for email/password authentication: 
          createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
          // for logging out:
          signOut
   } from "firebase/auth";
 import { Button } from 'react-native-paper';
-import { formatJSON, emailOf } from '../utils';
+import { emailOf } from '../utils';
 import styles from '../styles';
 
 export default function SignInOutPScreen( {auth, loginProps, setPscreen} ) {
 
-  const [errorMsg, setErrorMsg] = React.useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
       // Executed when entering component
