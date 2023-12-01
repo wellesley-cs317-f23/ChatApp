@@ -73,8 +73,6 @@ export default StyleSheet.create({
   button: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 3,
-      paddingHorizontal: 3,
       borderRadius: 10,
       elevation: 3,
       backgroundColor: 'steelblue',
@@ -83,21 +81,18 @@ export default StyleSheet.create({
   buttonDisabled: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 3,
-      paddingHorizontal: 3,
       borderRadius: 10,
       elevation: 3,
       backgroundColor: 'powderblue',
       margin: 3,
   },
   buttonText: {
-      fontSize: 18,
+      fontSize: 15,
       fontWeight: 'bold',
-      letterSpacing: 0.25,
       color: 'white',
   },
   smallButtonText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: 'bold',
     color: 'white',
  },
@@ -152,7 +147,7 @@ export default StyleSheet.create({
     color:'black',
   },
   composePane: {
-    width:'90%',
+    width:'100%',
     borderWidth: 1,
     borderColor: 'blue',
   },

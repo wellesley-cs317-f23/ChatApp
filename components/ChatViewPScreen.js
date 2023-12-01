@@ -213,10 +213,6 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
           + " components/ChatViewScreen.js.");
   }
 
-
-
-
-
   /**
    * Get current messages for the given channel
    */ 
@@ -309,21 +305,21 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
    * Pick an image from the device's image gallery and store it in 
    * the state variable postImageUri. 
    * For a simple demonstration of image picking, see the Snack 
-   * https://snack.expo.dev/@fturbak/image-picker
+   * https://snack.expo.dev/@fturbak/image-picker-example
    */ 
   async function pickImage () {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
-        aspect: [4, 3],
+        aspect: [4, 3], // desired aspect ratio of images
         quality: 1,
       });
 
     console.log('Picked image:', result);
 
-    if (!result.cancelled) {
-      setPostImageUri(result.uri);
+    if (!result.canceled) {
+      setPostImageUri(result.assets[0].uri);
     }
   };
 
@@ -365,6 +361,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
     // First: create a so-called storageRef, an abstraction location 
     // in Firebase's storages (different from Firestore!) where the
     // bits of the image will be stored. 
+    const timestamp = msg.timestamp;
     const storageRef = ref(storage, `chatImages/${timestamp}`);
 
     // Second: turn a local image from an image picker into 
@@ -379,7 +376,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
     // that receives state changes about upload progress that are here 
     // displayed in the console, but could be displayed in the app itself. 
     const uploadTask = uploadBytesResumable(storageRef, imageBlob);
-    console.log(`Uploading image for message ${timestamp} ...`);
+    console.log(`Uploading image for message with timestamp ${timestamp} ...`);
     uploadTask.on('state_changed',
       // This callback is called with a snapshot on every progress update
       (snapshot) => {
@@ -402,13 +399,13 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
       }, 
       // This callback is called when the upload is finished 
       async function() {
-        console.log(`Uploading image for message ${timestamp} succeeded!`);
+        console.log(`Uploading image for message with timestamp ${timestamp} succeeded!`);
         // Once the upload is finished, get the downloadURL for the uploaed image
         const downloadURL = await getDownloadURL(storageRef);
-        console.log(`Message image file for ${timestamp} available at ${downloadURL}`);
+        console.log(`Image fileMessage for message with timestamp ${timestamp} available at ${downloadURL}`);
 
         // Add the downloadURL as the imageUri for the message
-        const messageWithDownloadURL = {...newMessage, imageUri: downloadURL}; 
+        const messageWithDownloadURL = {...msg, imageUri: downloadURL}; 
 
         // Store (in Firestore) the message with the downloadURL as imageUri
         firebasePostMessage(messageWithDownloadURL);
@@ -420,26 +417,19 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
   }
 
   /**
-   * Helper function for formatting data for messages 
-   */ 
-  function formatDateTime(date) {
-    return `${date.toLocaleDateString('en-US')} ${date.toLocaleTimeString('en-US')}`; 
-  }
-
-  /**
    * MessageItem is a simple component for displaying a single chat message
    */
-  const MessageItem = props => { 
+  const MessageItem = ( { message } ) => { 
     return (
       <View style={styles.messageItem}>
-        <Text style={styles.messageDateTime}>{formatDateTime(props.message.date)}</Text>
-        <Text style={styles.messageAuthor}>{props.message.author}</Text>
-        <Text style={styles.messageContent}>{props.message.content}</Text>
+        <Text style={styles.messageDateTime}>{utils.formatDateTime(message.date)}</Text>
+        <Text style={styles.messageAuthor}>{message.author}</Text>
+        <Text style={styles.messageContent}>{message.content}</Text>
         {// Conditionall display image if there is one: 
-          props.message.imageUri &&
+          message.imageUri &&
           <Image
             style={styles.thumbnail}
-            source={{uri: props.message.imageUri}}
+            source={{uri: message.imageUri}}
           />
         }
       </View> 
@@ -519,14 +509,13 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
             onPress={cancelMessage}>
             Cancel
           </Button>
-          {/*<Button
+          <Button
             mode="contained" 
             style={globalStyles.button}
             labelStyle={globalStyles.buttonText}
             onPress={addImageToMessage}>
             Add Image
           </Button>
-          */}
           <Button
             mode="contained" 
             style={globalStyles.button}

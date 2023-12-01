@@ -41,8 +41,10 @@ export default function App() {
   // Default email and password (simplifies testing)
   // const defaultEmail = ... your email here ...
   // const defaultPassword = ... your password here ...
-  const defaultEmail = '';
-  const defaultPassword = ''
+  const defaultEmail = 'fturbak@gmail.com';
+  const defaultPassword = 'myPassword'
+  // const defaultEmail = '';
+  // const defaultPassword = ''
   const [pscreen, setPscreen] = useState("login");
 
   // Shared state for authentication 
