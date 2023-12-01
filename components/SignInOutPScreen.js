@@ -12,21 +12,19 @@ import { Button } from 'react-native-paper';
 import { formatJSON, emailOf } from '../utils';
 import styles from '../styles';
 
-export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen} ) {
+export default function SignInOutPScreen( {auth, loginProps, setPscreen} ) {
 
   const [errorMsg, setErrorMsg] = React.useState('');
-  const [extra, setExtra] = useState('');
-  const auth = firebaseProps.auth;
 
-    useEffect(() => {
+  useEffect(() => {
       // Executed when entering component
       console.log('Entering SignInOutPScreen');
       console.log(`on enter: emailOf(auth.currentUser)=${emailOf(auth.currentUser)}`);
-      console.log(`on enter: emailOf(authProps.loggedInUser)=${emailOf(authProps.loggedInUser)}`);
-      if (authProps.email !== '' && authProps.password !== '') {
+      console.log(`on enter: emailOf(loginProps.loggedInUser)=${emailOf(loginProps.loggedInUser)}`);
+      if (loginProps.email !== '' && loginProps.password !== '') {
         // If defaults are provided for email and password, 
         // use them to log in to avoid the hassle of logging in
-        // console.log(`on enter: attempting to sign in default user ${authProps.email}`);
+        // console.log(`on enter: attempting to sign in default user ${loginProps.email}`);
         // signInUserEmailPassword();
       } 
       setErrorMsg(''); // Clear any error message
@@ -37,7 +35,7 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
         // Executed when exiting component
         console.log('Exiting SignInOutPScreen');
         console.log(`on exit: emailOf(auth.currentUser)=${emailOf(auth.currentUser)}`);
-        console.log(`on exit: emailOf(authProps.loggedInUser)=${emailOf(authProps.loggedInUser)}`);
+        console.log(`on exit: emailOf(logingProps.loggedInUser)=${emailOf(loginProps.loggedInUser)}`);
       }
     }, []);
 
@@ -47,22 +45,22 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
         signOut(auth); // sign out auth's current user (who is not loggedInUser, 
                        // or else we wouldn't be here
       }
-      if (!authProps.email.includes('@')) {
+      if (!loginProps.email.includes('@')) {
         setErrorMsg('Not a valid email address');
         return;
       }
-      if (authProps.password.length < 6) {
+      if (loginProps.password.length < 6) {
         setErrorMsg('Password too short');
         return;
       }
       // Invoke Firebase authentication API for Email/Password sign up 
-      createUserWithEmailAndPassword(auth, authProps.email, authProps.password)
+      createUserWithEmailAndPassword(auth, loginProps.email, loginProps.password)
         .then((userCredential) => {
-          console.log(`signUpUserEmailPassword: sign up for email ${authProps.email} succeeded (but email still needs verification).`);
+          console.log(`signUpUserEmailPassword: sign up for email ${loginProps.email} succeeded (but email still needs verification).`);
   
           // Clear email/password inputs
-          authProps.setEmail(authProps.defaultEmail);
-          authProps.setPassword(authProps.defaultPassword);
+          loginProps.setEmail(loginProps.defaultEmail);
+          loginProps.setPassword(loginProps.defaultPassword);
   
           // Note: could store userCredential here if wanted it later ...
           // console.log(`createUserWithEmailAndPassword: setCredential`);
@@ -73,13 +71,13 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
           sendEmailVerification(auth.currentUser)
           .then(() => {
               console.log('signUpUserEmailPassword: sent verification email');
-              setErrorMsg(`A verification email has been sent to ${authProps.email}. You will not be able to sign in to this account until you click on the verification link in that email.`); 
+              setErrorMsg(`A verification email has been sent to ${loginProps.email}. You will not be able to sign in to this account until you click on the verification link in that email.`); 
               // Email verification sent!
               // ...
             });
         })
         .catch((error) => {
-          console.log(`signUpUserEmailPassword: sign up failed for email ${authProps.email}`);
+          console.log(`signUpUserEmailPassword: sign up failed for email ${loginProps.email}`);
           const errorMessage = error.message;
           // const errorCode = error.code; // Could use this, too.
           console.log(`createUserWithEmailAndPassword: ${errorMessage}`);
@@ -90,25 +88,25 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
     function signInUserEmailPassword() {
       console.log('called signInUserEmailPassword');
       console.log(`signInUserEmailPassword: emailOf(currentUser)0=${emailOf(auth.currentUser)}`); 
-      console.log(`signInUserEmailPassword: emailOf(authProps.loggedInUser)0=${emailOf(authProps.loggedInUser)}`); 
+      console.log(`signInUserEmailPassword: emailOf(loginProps.loggedInUser)0=${emailOf(loginProps.loggedInUser)}`); 
       // Invoke Firebase authentication API for Email/Password sign in 
       // Use Email/Password for authentication 
-      signInWithEmailAndPassword(auth, authProps.email, authProps.password)
+      signInWithEmailAndPassword(auth, loginProps.email, loginProps.password)
                                  /* 
                                  defaultEmail ? defaultEmail : email, 
                                  defaultPassword ? defaultPassword : password
                                  */
         .then((userCredential) => {
-          console.log(`signInUserEmailPassword succeeded for email ${authProps.email}; have userCredential for emailOf(auth.currentUser)=${emailOf(auth.currentUser)} (but may not be verified)`); 
+          console.log(`signInUserEmailPassword succeeded for email ${loginProps.email}; have userCredential for emailOf(auth.currentUser)=${emailOf(auth.currentUser)} (but may not be verified)`); 
           console.log(`signInUserEmailPassword: emailOf(currentUser)1=${emailOf(auth.currentUser)}`); 
-          console.log(`signInUserEmailPassword: emailOf(authProps.loggedInUser)1=${emailOf(authProps.loggedInUser)}`); 
+          console.log(`signInUserEmailPassword: emailOf(loginProps.loggedInUser)1=${emailOf(loginProps.loggedInUser)}`); 
   
           // Only log in auth.currentUser if their email is verified
           checkEmailVerification();
   
           // Clear email/password inputs 
-          authProps.setEmail(authProps.defaultEmail);
-          authProps.setPassword(authProps.defaultPassword);
+          loginProps.setEmail(loginProps.defaultEmail);
+          loginProps.setPassword(loginProps.defaultPassword);
   
           // Note: could store userCredential here if wanted it later ...
           // console.log(`createUserWithEmailAndPassword: setCredential`);
@@ -116,7 +114,7 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
       
           })
         .catch((error) => {
-          console.log(`signUpUserEmailPassword: sign in failed for email ${authProps.email}`);
+          console.log(`signUpUserEmailPassword: sign in failed for email ${loginProps.email}`);
           const errorMessage = error.message;
           // const errorCode = error.code; // Could use this, too.
           console.log(`signInUserEmailPassword: ${errorMessage}`);
@@ -129,7 +127,7 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
         console.log(`checkEmailVerification: auth.currentUser.emailVerified=${auth.currentUser.emailVerified}`);
         if (auth.currentUser.emailVerified) {
           console.log(`checkEmailVerification: setLoggedInUser for ${auth.currentUser.email}`);
-          authProps.setLoggedInUser(auth.currentUser);
+          loginProps.setLoggedInUser(auth.currentUser);
           console.log("checkEmailVerification: setErrorMsg('')");
           setErrorMsg('');
           setPscreen('chat'); // Go to the Chat PseudoScreen
@@ -142,17 +140,17 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
 
   return (
     <View style={styles.screen}>
-      <View style={authProps.loggedInUser === null ? styles.signInOutPane : styles.hidden}>
+      <View style={loginProps.loggedInUser === null ? styles.signInOutPane : styles.hidden}>
         <Text>SignInPane</Text>
         <View style={styles.labeledInput}>
             <Text style={styles.inputLabel}>Email:</Text>
             <TextInput 
               placeholder="Enter your email address" 
               style={styles.textInput} 
-              value={authProps.email} 
+              value={loginProps.email} 
               onChangeText={ 
                 text => {
-                  authProps.setEmail(text);
+                  loginProps.setEmail(text);
                   setErrorMsg(''); // Clear any error message
                 }
               } />
@@ -162,10 +160,10 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
             <TextInput 
               placeholder="Enter your password" 
               style={styles.textInput} 
-              value={authProps.password} 
+              value={loginProps.password} 
               onChangeText={ 
                 text => {
-                  authProps.setPassword(text);
+                  loginProps.setPassword(text);
                   setErrorMsg(''); // Clear any error message
                 }
               }/>
@@ -190,12 +188,12 @@ export default function SignInOutPScreen( {firebaseProps, authProps, setPscreen}
             <Text style={styles.errorMessage}>{errorMsg}</Text>
           </View>
       </View>
-      <View style={authProps.loggedInUser === null ? styles.hidden : styles.signInOutPane }>
+      <View style={loginProps.loggedInUser === null ? styles.hidden : styles.signInOutPane }>
             <Button
               mode="contained" 
               style={styles.button}
               labelStyle={styles.buttonText}
-              onPress={() => authProps.logOut()}>
+              onPress={() => loginProps.logOut()}>
                 Sign Out
             </Button>
      </View>

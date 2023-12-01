@@ -34,7 +34,7 @@ const displayPopulateButton = false;
 // Default initial channels
 const defaultChannels = ['Arts', 'Crafts', 'Food', 'Gatherings', 'Outdoors'];
 
-export default function ChatViewPScreen( {firebaseProps, authProps, setPscreen}) {
+export default function ChatViewPScreen( {firebaseProps, loginProps}) {
   const auth = firebaseProps.auth;
   const db = firebaseProps.db;
   const storage = firebaseProps.storage;
@@ -461,7 +461,7 @@ export default function ChatViewPScreen( {firebaseProps, authProps, setPscreen})
       const now = new Date();
       const timestamp = now.getTime(); // millsecond timestamp
       const newMessage = {
-        'author': authProps.loggedInUser.email, 
+        'author': loginProps.loggedInUser.email, 
         'date': now, 
         'timestamp': timestamp, 
         'channel': selectedChannel, 
@@ -491,22 +491,20 @@ export default function ChatViewPScreen( {firebaseProps, authProps, setPscreen})
     return (
       isComposingMessage &&
       <View style={styles.composePane}>
-        <TextInput
+        {/*<TextInput
           placeholder="message text goes here"
           style={styles.textInputArea}
           value={textInputValue} 
           onChangeText={setTextInputValue}
-        /> 
-        {/*
+ 
+    /> */}
         <TextInput
           multiline
-          numberOfLines={3}
           placeholder="message text goes here"
           style={styles.textInputArea}
           value={textInputValue} 
-          onChangeText={(value) => setTextInputValue(value)}
-        /> 
-       */}
+          onChangeText={setTextInputValue}
+        />
         {// Conditionally display image if there is one: 
          postImageUri &&
           <Image
@@ -571,7 +569,7 @@ export default function ChatViewPScreen( {firebaseProps, authProps, setPscreen})
 
   return (
     <View style={globalStyles.screen}>
-      <Text>{utils.emailOf(authProps.loggedInUser)} is logged in</Text>
+      <Text>{utils.emailOf(loginProps.loggedInUser)} is logged in</Text>
       <Text>{`usingFirestore=${usingFirestore}`}</Text>
       <View style={globalStyles.buttonHolder}>
         <DebugButton/>
@@ -595,7 +593,7 @@ export default function ChatViewPScreen( {firebaseProps, authProps, setPscreen})
 const styles = StyleSheet.create({
   header: {
     marginTop: 10,
-    fontSize: 25,
+    fontSize: 20,
     fontWeight: 'bold'
   },
   pickerStyles:{
@@ -628,7 +626,7 @@ const styles = StyleSheet.create({
     color:'black',
   },
   composePane: {
-    width:'90%',
+    width:'70%',
     borderWidth: 1,
     borderColor: 'blue',
   },

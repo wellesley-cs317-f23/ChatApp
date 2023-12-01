@@ -39,10 +39,10 @@ export default function App() {
   // PseudoScreens
 
   // Default email and password (simplifies testing)
-  const defaultEmail = 'fturbak@gmail.com';
-  const defaultPassword = 'myPassword'
-  // const defaultEmail = '';
-  // const defaultPassword = ''
+  // const defaultEmail = ... your email here ...
+  // const defaultPassword = ... your password here ...
+  const defaultEmail = '';
+  const defaultPassword = ''
   const [pscreen, setPscreen] = useState("login");
 
   // Shared state for authentication 
@@ -61,7 +61,7 @@ export default function App() {
     signOut(auth); // Will eventually set auth.currentUser to null     
   }
 
-  const authProps = { 
+  const loginProps = { 
                       defaultEmail, defaultPassword, 
                       email, setEmail, 
                       password, setPassword, 
@@ -81,8 +81,8 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       { pscreen === "login" &&
         <SignInOutPScreen 
-          authProps={authProps} 
-          firebaseProps={firebaseProps}
+          loginProps={loginProps} 
+          auth={auth}
           setPscreen={changePscreen}/>
       }
       { pscreen === "chat" &&
@@ -92,9 +92,8 @@ export default function App() {
           </View>
          */ 
         <ChatViewPScreen 
-        authProps={authProps} 
-        firebaseProps={firebaseProps}
-        setPscreen={changePscreen}/>
+          loginProps={loginProps} 
+          firebaseProps={firebaseProps}/>
      }
       <View style={{width: '100%'}}>
       <SegmentedButtons
