@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { Alert, Text, TextInput, View } from 'react-native';
-import { // access to authentication features:
-         getAuth, 
-         // for email/password authentication: 
+import { // for email/password authentication: 
          createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
          // for logging out:
          signOut

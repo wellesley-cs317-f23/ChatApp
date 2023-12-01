@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
-import { // access to Firestore storage features:
-         getFirestore, 
-         // for storage access
+import { // for Firestore access
          collection, doc, addDoc, setDoc,
          query, where, getDocs
   } from "firebase/firestore";
@@ -28,9 +26,9 @@ const displayPopulateButton = false;
 const defaultChannels = ['Arts', 'Crafts', 'Food', 'Gatherings', 'Outdoors'];
 
 export default function ChatViewPScreen( {firebaseProps, loginProps} ) {
+  
   const auth = firebaseProps.auth;
   const db = firebaseProps.db;
-  const storage = firebaseProps.storage;
 
   function addTimestamp(message) {
     // Add millisecond timestamp field to message 
