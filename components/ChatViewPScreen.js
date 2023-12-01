@@ -48,7 +48,6 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
   const [channels, setChannels] = React.useState(defaultChannels);
   const [selectedChannel, setSelectedChannel] = React.useState('Food');
   const [selectedMessages, setSelectedMessages] = React.useState([]);
-  const [textInputValue2, setTextInputValue2] = useState('');
   const [isComposingMessage, setIsComposingMessage] = useState(false);
   // Faking message database (just a list of messages) for local testing
   const [localMessageDB, setLocalMessageDB] = useState(testMessages.map( addTimestamp ));
