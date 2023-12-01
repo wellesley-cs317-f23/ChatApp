@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Text, FlatList, View, SafeAreaView, ScrollView, 
-         StyleSheet, TouchableOpacity } from 'react-native';
+import { View, SafeAreaView } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
 import SignInOutPScreen from './components/SignInOutPScreen';
 import ChatViewPScreen from './components/ChatViewPScreen';
@@ -9,26 +8,20 @@ import styles from './styles';
 import { emailOf } from './utils';
 import { firebaseConfig } from './firebaseConfig.js'
 import { initializeApp } from 'firebase/app';
-import { // access to authentication features:
-  getAuth, 
-  // for logging out:
-  signOut
+import { 
+  getAuth, // access to authentication features:
+  signOut, // for logging out:
 } from "firebase/auth";
 import { // access to Firestore features:
   getFirestore, 
 } from "firebase/firestore";
-import { // access to Firebase storage features (for files like images, video, etc.)
-  getStorage, 
-} from "firebase/storage";
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp); // for storaging messages in Firestore
-const storage = getStorage(firebaseApp, 
-    firebaseConfig.storageBucket) // for storaging images in Firebase storage
 
-const firebaseProps = {auth, db, storage}
+const firebaseProps = {auth, db}
 
 export default function App() {
 
@@ -41,17 +34,13 @@ export default function App() {
   // Default email and password (simplifies testing)
   // const defaultEmail = ... your email here ...
   // const defaultPassword = ... your password here ...
-  const defaultEmail = 'fturbak@gmail.com';
-  const defaultPassword = 'myPassword'
-  // const defaultEmail = '';
-  // const defaultPassword = ''
+  const defaultEmail = '';
+  const defaultPassword = ''
   const [pscreen, setPscreen] = useState("login");
 
   // Shared state for authentication 
   const [email, setEmail] = useState(defaultEmail); // Provide default email for testing
   const [password, setPassword] = useState(defaultPassword); // Provide default passwored for testing
-  // const [email, setEmail] = useState(''); // Provide default email for testing
-  // const [password, setPassword] = useState(''); // Provide default passwored for testing
   const [loggedInUser, setLoggedInUser] = useState(null);
   function logOut() {
     console.log('logOut'); 

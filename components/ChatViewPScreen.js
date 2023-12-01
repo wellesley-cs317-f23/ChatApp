@@ -1,19 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { FlatList, Image, LogBox, StyleSheet, ScrollView, 
-         Text, TextInput, TouchableOpacity, 
-         TouchableWithoutFeedback, View } from 'react-native';
+import { useState, useEffect } from "react";
+import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
-import * as ImagePicker from 'expo-image-picker';
 import { // access to Firestore storage features:
          getFirestore, 
          // for storage access
          collection, doc, addDoc, setDoc,
          query, where, getDocs
   } from "firebase/firestore";
-import { // access to Firebase storage features (for files like images, video, etc.)
-         getStorage, 
-        ref, uploadBytes, uploadBytesResumable, getDownloadURL
-       } from "firebase/storage";
 import { Button } from 'react-native-paper';
 import * as utils from '../utils';
 import globalStyles from '../styles';
@@ -34,7 +27,7 @@ const displayPopulateButton = false;
 // Default initial channels
 const defaultChannels = ['Arts', 'Crafts', 'Food', 'Gatherings', 'Outdoors'];
 
-export default function ChatViewPScreen( {firebaseProps, loginProps}) {
+export default function ChatViewPScreen( {firebaseProps, loginProps} ) {
   const auth = firebaseProps.auth;
   const db = firebaseProps.db;
   const storage = firebaseProps.storage;
@@ -45,15 +38,13 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
   }  
 
   // State for chat channels and messages
-  const [channels, setChannels] = React.useState(defaultChannels);
-  const [selectedChannel, setSelectedChannel] = React.useState('Food');
-  const [selectedMessages, setSelectedMessages] = React.useState([]);
+  const [channels, setChannels] = useState(defaultChannels);
+  const [selectedChannel, setSelectedChannel] = useState('Food');
+  const [selectedMessages, setSelectedMessages] = useState([]);
   const [isComposingMessage, setIsComposingMessage] = useState(false);
   // Faking message database (just a list of messages) for local testing
   const [localMessageDB, setLocalMessageDB] = useState(testMessages.map( addTimestamp ));
   const [usingFirestore, setUsingFirestore] = useState(true); // If false, only using local data. 
-  const [postImageUri, setPostImageUri] = useState(null);
-
 
   /***************************************************************************
    CHAT CHANNEL/MESSAGE CODE
@@ -256,13 +247,11 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
    * by adding a human-readable date (which isn't stored in Firestore).
    */ 
   function docToMessage(msgDoc) {
-    // msgDoc has the form {id: timestampetring, 
+    // msgDoc has the form {id: timestampstring, 
     //                   data: {timestamp: ..., // a number, not a string 
     //                          author: ..., // email address
     //                          channel: ..., // name of channel 
     //                          content: ..., // string for contents of message. 
-    //                          imageUri: ... // optional field containing downloadURL for
-    //                                        // image file stored in Firebase's storage
     //                          }
     // Need to add missing date field to data portion, reconstructed from timestamp
     // console.log('docToMessage');
@@ -286,50 +275,13 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
    */ 
   function cancelMessage() {
     setIsComposingMessage(false);
-    setPostImageUri(null);
   }
-
-  /**
-   * Add an image to the message being composed. 
-   * This is the action for the Add Image button in the message composition pane.
-   * Currently, only one image can be added to a message; calling this
-   * when there's already an image changes the image to be added. 
-   * This behavior could be modified to support a *list* of an arbitrary
-   * number of images. 
-   */ 
-  async function addImageToMessage () {
-    await(pickImage());
-  } 
-
-  /**
-   * Pick an image from the device's image gallery and store it in 
-   * the state variable postImageUri. 
-   * For a simple demonstration of image picking, see the Snack 
-   * https://snack.expo.dev/@fturbak/image-picker-example
-   */ 
-  async function pickImage () {
-    // No permissions request is necessary for launching the image library
-    let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
-        aspect: [4, 3], // desired aspect ratio of images
-        quality: 1,
-      });
-
-    console.log('Picked image:', result);
-
-    if (!result.canceled) {
-      setPostImageUri(result.assets[0].uri);
-    }
-  };
 
   /**
    * Post a message to Firebase's Firestore by adding a new document
    * for the message in the "messages" collection. It is expected that 
    * msg is a JavaScript object with fields timestamp, date, author, 
-   * channel, and content, and an optional imageUri field 
-   * (which, if it exists, should be the downloadURL for an image
-   * stored in Firebase's storage)
+   * channel, and content.
    */ 
   async function firebasePostMessage(msg) {
     // Convert millisecond timestamp to string 
@@ -349,73 +301,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
         docMessage);
   }
 
-  /**
-   * Post a message with an image. This is more complicated than
-   * posting a message without an image, because with an image we need to:
-   * (1) store the image in Firebase storage (different than Firestore)
-   * (2) get the downloadURL for the image in Firebase storage
-   * (3) add the downloadURL as the imageUri for the msg
-   * (4) post the msg-with-imageUri to Firestore. 
-   */ 
-  async function firebasePostMessageWithImage(msg, imageUri) {
-    // First: create a so-called storageRef, an abstraction location 
-    // in Firebase's storages (different from Firestore!) where the
-    // bits of the image will be stored. 
-    const timestamp = msg.timestamp;
-    const storageRef = ref(storage, `chatImages/${timestamp}`);
-
-    // Second: turn a local image from an image picker into 
-    // a so-called Blob that can be uploaded to Firebase storage. 
-    // Lyn learned the next critical two lines of code from 
-    // Bianca Pio and Avery Kim's Goose app: 
-    const fetchResponse = await fetch(postImageUri);
-    const imageBlob = await fetchResponse.blob();
-
-    // Third: upload the image blob to Firebase storage.
-    // uploadBytesResumable returns a Promise (here called uploadTask)
-    // that receives state changes about upload progress that are here 
-    // displayed in the console, but could be displayed in the app itself. 
-    const uploadTask = uploadBytesResumable(storageRef, imageBlob);
-    console.log(`Uploading image for message with timestamp ${timestamp} ...`);
-    uploadTask.on('state_changed',
-      // This callback is called with a snapshot on every progress update
-      (snapshot) => {
-        // Get task progress, including the number of bytes uploaded 
-        // and the total number of bytes to be uploaded
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case 'paused':
-            console.log('Upload is paused');
-            break;
-          case 'running':
-            console.log('Upload is running');
-            break;
-            }
-      }, 
-      // This callback is called when there's an error in the upload
-      (error) => {
-        console.error(error);
-      }, 
-      // This callback is called when the upload is finished 
-      async function() {
-        console.log(`Uploading image for message with timestamp ${timestamp} succeeded!`);
-        // Once the upload is finished, get the downloadURL for the uploaed image
-        const downloadURL = await getDownloadURL(storageRef);
-        console.log(`Image fileMessage for message with timestamp ${timestamp} available at ${downloadURL}`);
-
-        // Add the downloadURL as the imageUri for the message
-        const messageWithDownloadURL = {...msg, imageUri: downloadURL}; 
-
-        // Store (in Firestore) the message with the downloadURL as imageUri
-        firebasePostMessage(messageWithDownloadURL);
-
-        // Clear postImageUri in preparation for the next message composition. 
-        setPostImageUri(null);
-      }      
-    ); // end arguments to uploadTask.on
-  }
-
+  
   /**
    * MessageItem is a simple component for displaying a single chat message
    */
@@ -425,18 +311,14 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
         <Text style={styles.messageDateTime}>{utils.formatDateTime(message.date)}</Text>
         <Text style={styles.messageAuthor}>{message.author}</Text>
         <Text style={styles.messageContent}>{message.content}</Text>
-        {// Conditionall display image if there is one: 
-          message.imageUri &&
-          <Image
-            style={styles.thumbnail}
-            source={{uri: message.imageUri}}
-          />
-        }
       </View> 
     ); 
   }
 
   function ComposeMessagePane() {
+    // Lyn sez: dunno why, but declaring this state variable *outside*
+    // of this local component causes keyboard to close every time
+    // a character is typed. 
     const [textInputValue, setTextInputValue] = useState('');
 
     /**
@@ -456,10 +338,7 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
         'channel': selectedChannel, 
         'content': textInputValue, 
       }
-      // Add imageUri to newMessage if there is one. 
-      if (postImageUri) {
-        newMessage.imageUri = postImageUri; // Local image uri
-      }
+
       // Want to see new message immediately, no matter what,
       // independent of local vs Firebase mode. 
       setSelectedMessages([...selectedMessages, newMessage]) 
@@ -467,26 +346,13 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
       if (! usingFirestore) {
         setLocalMessageDB([...localMessageDB, newMessage]);
       } else {
-        if (!postImageUri) {
-          firebasePostMessage(newMessage);
-        } else {
-          // Posting message with image is more complicated,
-          // have a separate helper function for this
-          firebasePostMessageWithImage(newMessage)
-        }
+        firebasePostMessage(newMessage);
       }
     }
   
     return (
       isComposingMessage &&
       <View style={styles.composePane}>
-        {/*<TextInput
-          placeholder="message text goes here"
-          style={styles.textInputArea}
-          value={textInputValue} 
-          onChangeText={setTextInputValue}
- 
-    /> */}
         <TextInput
           multiline
           placeholder="message text goes here"
@@ -494,13 +360,6 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
           value={textInputValue} 
           onChangeText={setTextInputValue}
         />
-        {// Conditionally display image if there is one: 
-         postImageUri &&
-          <Image
-            style={styles.thumbnail}
-            source={{uri: postImageUri}}
-          />
-        }
         <View style={globalStyles.buttonHolder}>
           <Button
             mode="contained" 
@@ -508,13 +367,6 @@ export default function ChatViewPScreen( {firebaseProps, loginProps}) {
             labelStyle={globalStyles.buttonText}
             onPress={cancelMessage}>
             Cancel
-          </Button>
-          <Button
-            mode="contained" 
-            style={globalStyles.button}
-            labelStyle={globalStyles.buttonText}
-            onPress={addImageToMessage}>
-            Add Image
           </Button>
           <Button
             mode="contained" 
@@ -637,16 +489,6 @@ const styles = StyleSheet.create({
       paddingHorizontal: 10,
       backgroundColor: 'salmon',
       marginLeft: 10,
-  },
-  bigImage: {
-      width: 300,
-      height: 300,
-      margin: 20
-  },
-  thumbnail: {
-      width: 90,
-      height: 90,
-      margin: 10
   },
 });
 
