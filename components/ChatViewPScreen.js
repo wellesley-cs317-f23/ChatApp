@@ -10,23 +10,12 @@ import * as utils from '../utils';
 import globalStyles from '../styles';
 import { testMessages } from '../fakeData';
 
-// The following are not state variables but regular boolean constants 
-// that control the display of various buttons useful for development
-
-// Controls whether Debug button is displayed at top of screen
-const displayDebugButton = false; 
-
-// Controls wheter ToggleStorage button is displayed top of screen
-const displayToggleStorageButton = true; 
-
-// Controls wheter Populate button is displayed top of screen
-const displayPopulateButton = false; 
-
 // Default initial channels
 const defaultChannels = ['Arts', 'Crafts', 'Food', 'Gatherings', 'Outdoors'];
 
 export default function ChatViewPScreen( {firebaseProps, loginProps} ) {
   
+  // Extract Firebase variables from firebaseProps
   const auth = firebaseProps.auth;
   const db = firebaseProps.db;
 
@@ -78,8 +67,8 @@ export default function ChatViewPScreen( {firebaseProps, loginProps} ) {
    * Button for displaying debugging information within app itself. 
    * The button is displayed only if displayDebugButton is true
    */ 
-  function DebugButton() {
-    if (displayDebugButton) {
+  function DebugButton( {visible} ) {
+    if (visible) {
       return (
         <Button
           mode="contained" 
@@ -117,8 +106,8 @@ export default function ChatViewPScreen( {firebaseProps, loginProps} ) {
    * Button for toggling between localDB and Firebase storage 
    * The button is displayed only if the argument is true
    */ 
-    function ToggleStorageButton() {
-      if (displayToggleStorageButton) {
+    function ToggleStorageButton( {visible} ) {
+      if (visible) {
         return (
           <Button
             mode="contained" 
@@ -149,8 +138,8 @@ export default function ChatViewPScreen( {firebaseProps, loginProps} ) {
    * Button for populating Firestore with a list of fake chat messages. 
    * The button is displayed only if displayPopulateButton is true
    */ 
-  function PopulateButton() {
-    if (displayPopulateButton) {
+  function PopulateButton( {visible} ) {
+    if (visible) {
       return (
         <Button
           mode="contained" 
@@ -410,9 +399,9 @@ export default function ChatViewPScreen( {firebaseProps, loginProps} ) {
       <Text>{utils.emailOf(loginProps.loggedInUser)} is logged in</Text>
       <Text>{`usingFirestore=${usingFirestore}`}</Text>
       <View style={globalStyles.buttonHolder}>
-        <DebugButton/>
-        <PopulateButton/>
-        <ToggleStorageButton/>
+        <DebugButton visible={false}/>
+        <PopulateButton visible={true}/>
+        <ToggleStorageButton visible={true}/>
         <Button
             mode="contained" 
             style={globalStyles.button}
